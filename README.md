@@ -1,2 +1,33 @@
-# ScreenSystem
- 
+<h1 align="center">ScreenSystem</h1>
+
+Unity上のUI画面遷移を行うUnityScreenNavigatorとDIコンテナのVContainerの中継を行うライブラリです。
+
+## インストール
+UPMからgit URLで `https://github.com/adarapata/ScreenSystem.git?path=Assets/ScreenSystem` を追加してください。
+
+## 概要
+UnityScreenNavigatorのPageとModalについて（Sheetは未実装）型安全な遷移を行う+VContainerと組み合わせて定型的な処理を短く（引数を最小で）書くためのGlue libraryです。
+
+ModalManager及びPageManagerが内部で使われていて、実際のアプリに組み込んで使う場合は https://github.com/mr-imada/OutgameSample を参考にしてください。
+### 簡単な使い方(HogePageを作る場合)
+典型的には以下のように4個のクラスを作ることで新しいPageが生まれます。
+- HogePageBuilder.csを作ります。(ScreenSystemのPageBuilderBaseを継承してください。これによってstringではない型安全が実現できます。パラメータを渡すかどうかで定義が変わります)
+- HogePageLifecycle.csを作ります。(ScreenSystemのLifecyclePageBaseを継承してください。UnityScreenNavigatorのPageLifeCycleイベントを保持しています)
+- HogePageLifetimeScope.csを作ります。通常のVContainerでの作法と同様に、ViewのPageViewBaseあるいはModalViewBase（どちらも内部的にMonoBehaviour）と、非MonoBehaviourのLifecycle(Presenterとほぼ同義)を結びつけます
+- HogePageView.csを作ります。(ScreenSystemのPageViewBaseを継承してください。Viewなのでイベントハンドラを露出させてロジックをLifecycleやその先にあるModelに任せてください)
+
+また、Pageなどを渡すときは _pageContainer.Push()ではなくScreenSystemのPageEventPublisherなどでPushEventやPopEventを発火させてください。
+
+### Page
+内部で自前の IPageを持っています。
+ScreenSystem内でPageという単語を見た場合は自前のIPageであり、UnityScreenNavigatorのPageは明示的にPageViewBaseと言う単語で上書きしています。
+
+### Modal
+内部で自前の IModalを持っています。
+ScreenSystem内でModalという単語を見た場合は自前のIModalであり、UnityScreenNavigatorのModalは明示的にModalViewBaseと言う単語で上書きしています。
+
+
+### VContainerExtension
+- LifetimeScopeWithParameter… PageBuilderやModalBuilderの初期化時に任意の型をパラメータとして渡す拡張をしたVContainerのLifetimeScope。単一View内に閉じるデータに使うことを想定しています。（複数Viewで持つデータはRepositoryやUseCaseを別で持つべきです）
+- RegisterPageSystemExtension… VContainerのLifetimeScopeのConfigure内で `builder.RegisterPageSystem(_pageContainer);`とショートハンドで書くためのもの。内部で`PageManager`と`PageEventPublisher`をregisterしています
+- RegisterModalSystemExtension… 同上、Modal用なので`ModalManager`だけを内部でregisterしています
